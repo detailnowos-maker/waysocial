@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  app:
+    name: Tipos, lint e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test -- --ci
+      - run: npx expo-doctor
+
+  database:
+    name: RLS e integração (Postgres + PostgREST)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Postgres 16
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 postgresql-contrib || sudo apt-get install -y postgresql postgresql-contrib
+      - run: npm run db:test
+      - run: npm run db:integration
